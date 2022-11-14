@@ -23,7 +23,7 @@ public interface UserRepository extends JpaRepository<User, Long> {
     String passwordPassword = "UPDATE userauthentication.users SET password = ?1 WHERE email= ?2";
     
     @Transactional
-    @Modifying
+    @Modifying(clearAutomatically = true)
     @Query(value = passwordPassword, nativeQuery = true)
     void updateUserPass(String pass, String oldEmail);
       

@@ -35,6 +35,7 @@ import org.springframework.boot.autoconfigure.security.saml2.Saml2RelyingPartyPr
 
 @RestController
 @RequestMapping("/api/auth")
+@CrossOrigin(origins = "*")
 public class AuthenticationController {
 
 	User user = new User();
@@ -55,7 +56,7 @@ public class AuthenticationController {
 	private OtpMailSender mailSender;
 	
 	private String OTP; 
-	@CrossOrigin(origins = "*")
+	//@CrossOrigin(origins = "*")
 	@PostMapping("/signin")
 	public ResponseEntity<String> authenticateUser(@RequestBody LoginDto loginDto) {
 		Authentication authentication = authenticationManager.authenticate(
@@ -86,7 +87,10 @@ public class AuthenticationController {
 		user.setEmail(signUpDto.getEmail());
 		user.setDob(signUpDto.getDob());
 		user.setPhonenumber(signUpDto.getPhonenumber());
-		user.setPassword(passwordEncoder.encode(signUpDto.getPassword()));
+		BCryptPasswordEncoder passEncrypt = new BCryptPasswordEncoder();
+		String encrpytPass = passEncrypt.encode(signUpDto.getPassword());
+		user.setPassword(encrpytPass);
+//		user.setPassword(passwordEncoder.encode(signUpDto.getPassword()));
 
 		Role roles = roleRepository.findByName("ROLE_ADMIN").get();
 		user.setRoles(Collections.singleton(roles));
@@ -119,7 +123,10 @@ public class AuthenticationController {
 		if(otpValidate.getOtp().equals(OTP)) {
 			BCryptPasswordEncoder passEncrypt = new BCryptPasswordEncoder();
 			String encrpytPass = passEncrypt.encode(otpValidate.getPassword()); 
-			userRepository.updateUserPass(encrpytPass, otpValidate.getEmail());
+			User user = userRepository.findByEmail(otpValidate.getEmail());
+			user.setPassword(encrpytPass);
+			userRepository.save(user);
+//			userRepository.updateUserPass(encrpytPass, otpValidate.getEmail());
 			return "password has been changed";
 		}
 		return "Incorrect OTP!! Please provide correct OTP";
